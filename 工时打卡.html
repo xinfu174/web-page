@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>极简工时打卡 · 嫩绿轻量版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #eaf7e3;
+            font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            padding: 24px 20px 48px;
+            color: #2d4225;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 主卡片更大方，垂直方向自然舒展 */
+        .card {
+            max-width: 700px;
+            width: 100%;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 48px;
+            box-shadow: 0 20px 35px rgba(70, 100, 40, 0.1);
+            overflow: hidden;
+            padding: 32px 28px 40px;
+            transition: all 0.2s ease;
+        }
+
+        /* 头部 */
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 640;
+            color: #3f722a;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        h1::before {
+            content: "🌱";
+            font-size: 2rem;
+        }
+
+        /* 当前工作状态卡片 */
+        .work-status {
+            background: #fafff5;
+            border-radius: 32px;
+            padding: 20px 22px;
+            margin: 8px 0 24px 0;
+            border: 1px solid #d9efcb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+        .status-text {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 540;
+            color: #3a6429;
+            background: #eef8e6;
+            padding: 8px 20px;
+            border-radius: 60px;
+            font-size: 1rem;
+        }
+        .badge-working {
+            background: #daf1ce;
+            color: #266e0f;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* 最近打卡记录卡片 (新增) */
+        .recent-card {
+            background: #f5fef0;
+            border-radius: 28px;
+            padding: 18px 22px;
+            margin: 6px 0 24px 0;
+            border-left: 6px solid #9bc97a;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .recent-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c9a51;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .recent-content {
+            font-size: 1rem;
+            color: #2c4a1e;
+            font-weight: 500;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12px;
+        }
+        .recent-detail {
+            background: #ffffffc9;
+            padding: 6px 14px;
+            border-radius: 48px;
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+
+        /* 双按钮组 - 加大 */
+        .button-group {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0 28px 0;
+        }
+        .btn {
+            flex: 1;
+            border: none;
+            padding: 16px 0;
+            border-radius: 80px;
+            font-size: 1.2rem;
+            font-weight: 620;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #e6f2df;
+            color: #2d5720;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+        .btn-start {
+            background: #d2eac4;
+            border: 1px solid #bcddab;
+            color: #286b12;
+        }
+        .btn-end {
+            background: #eaf3e2;
+            border: 1px solid #cbe0bc;
+            color: #5b823f;
+        }
+        .btn:active {
+            transform: scale(0.97);
+            background: #cde2be;
+        }
+
+        /* 折叠控制按钮 */
+        .toggle-stats-btn {
+            background: #edf5e6;
+            border: 1px solid #d3e6c4;
+            width: 100%;
+            padding: 14px 0;
+            border-radius: 60px;
+            font-size: 1.05rem;
+            font-weight: 560;
+            color: #3f722a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin: 12px 0 20px 0;
+        }
+        .toggle-stats-btn:active {
+            background: #e1efd4;
+            transform: scale(0.98);
+        }
+
+        /* 可折叠统计面板 */
+        .stats-panel {
+            background: #f6fdf0;
+            border-radius: 32px;
+            padding: 22px 24px;
+            margin-bottom: 8px;
+            border: 1px solid #d9efcb;
+            transition: all 0.2s;
+        }
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+        .total-hours {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #3f6d2a;
+            background: #ecf8e2;
+            padding: 10px 20px;
+            border-radius: 60px;
+        }
+        .total-hours strong {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #236b0c;
+            letter-spacing: 1px;
+            margin-right: 6px;
+        }
+        .panel-actions {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .small-btn {
+            background: #eff7e8;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 530;
+            color: #578b3a;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .small-btn:active {
+            background: #e1efd4;
+            transform: scale(0.96);
+        }
+        .danger-btn {
+            color: #b5734b;
+            background: #fff2ea;
+        }
+        .record-title {
+            font-weight: 620;
+            font-size: 1.1rem;
+            color: #446e31;
+            margin: 16px 0 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid #ddecd0;
+            padding-top: 20px;
+        }
+
+        /* 记录表格 */
+        .records-container {
+            max-height: 420px;
+            overflow-y: auto;
+            border-radius: 28px;
+            background: #ffffff;
+            border: 1px solid #e6f0de;
+        }
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .records-table th {
+            text-align: left;
+            padding: 16px 12px;
+            background: #fafff5;
+            color: #4b7933;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            backdrop-filter: blur(4px);
+            border-bottom: 1px solid #ddecd0;
+            font-size: 0.9rem;
+        }
+        .records-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #eff7e7;
+            vertical-align: middle;
+            color: #2f4426;
+            font-size: 0.85rem;
+        }
+        .record-delete {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: #bbd6a8;
+            padding: 6px 10px;
+            border-radius: 40px;
+            transition: 0.1s;
+        }
+        .record-delete:active {
+            color: #c77b58;
+            background: #fef2ec;
+        }
+        .empty-row td {
+            text-align: center;
+            padding: 56px 20px;
+            color: #aec99a;
+            font-style: italic;
+        }
+
+        /* 滚动条 */
+        .records-container::-webkit-scrollbar {
+            width: 5px;
+        }
+        .records-container::-webkit-scrollbar-track {
+            background: #edf6e6;
+            border-radius: 10px;
+        }
+        .records-container::-webkit-scrollbar-thumb {
+            background: #bdd8aa;
+            border-radius: 10px;
+        }
+
+        /* 移动端优化 */
+        @media (max-width: 550px) {
+            body {
+                padding: 16px 12px 32px;
+            }
+            .card {
+                padding: 22px 18px 28px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .btn {
+                padding: 14px 0;
+                font-size: 1rem;
+            }
+            .total-hours strong {
+                font-size: 1.5rem;
+            }
+            .stats-panel {
+                padding: 16px 18px;
+            }
+            .recent-content {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #b2cf9c;
+            margin-top: 28px;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>极简工时打卡</h1>
+
+    <!-- 当前工作状态卡片 -->
+    <div class="work-status">
+        <div class="status-text" id="workStatusLabel">
+            🍃 当前状态 · 空闲中
+        </div>
+        <div class="status-text" id="activeStartTimeDisplay" style="background:transparent; padding:0;"></div>
+    </div>
+
+    <!-- 最近一次打卡记录展示区 -->
+    <div class="recent-card" id="recentRecordCard">
+        <div class="recent-title">📌 最近打卡记录</div>
+        <div class="recent-content" id="recentRecordContent">
+            <span>✨ 暂无打卡记录</span>
+        </div>
+    </div>
+
+    <!-- 打卡按钮组 -->
+    <div class="button-group">
+        <button class="btn btn-start" id="startWorkBtn">▶ 开始工作</button>
+        <button class="btn btn-end" id="endWorkBtn">⏹️ 结束工作</button>
+    </div>
+
+    <!-- 工时统计&管理入口按钮 -->
+    <button class="toggle-stats-btn" id="toggleStatsBtn">📊 工时汇总 & 数据管理</button>
+
+    <!-- 可折叠面板：总工时 + 复制记录/清空 + 工时记录明细 -->
+    <div id="statsPanel" class="stats-panel" style="display: none;">
+        <div class="stats-header">
+            <div class="total-hours">📈 累计总工时 · <strong id="totalHoursDisplay">0:00:00</strong></div>
+            <div class="panel-actions">
+                <!-- 替换导出按钮为复制记录按钮 -->
+                <button class="small-btn" id="copyRecordsBtn">📋 复制记录</button>
+                <button class="small-btn danger-btn" id="clearAllBtn">🗑️ 清空所有</button>
+            </div>
+        </div>
+        <div class="record-title">
+            📋 工时记录明细
+        </div>
+        <div class="records-container">
+            <table class="records-table" id="recordsTable">
+                <thead>
+                    <tr><th>开始时间</th><th>结束时间</th><th>工作时长</th><th style="width:40px"></th></tr>
+                </thead>
+                <tbody id="recordsTbody">
+                    <tr class="empty-row"><td colspan="4">✨ 暂无打卡记录，点击开始工作吧</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="font-size:0.75rem; color:#8cad76; text-align:right; margin-top:16px;">✅ 结束打卡自动累计 | 支持跨天</div>
+    </div>
+
+    <footer>数据存储于浏览器 | 所有记录本地保存</footer>
+</div>
+
+<script>
+    // ---------- 存储KEY ----------
+    const STORAGE_RECORDS = 'work_hours_records';      
+    const STORAGE_ACTIVE_START = 'work_active_start';  
+
+    // ---------- 全局数据 ----------
+    let records = [];           // 每个元素 { id, startTime, endTime, durationMs, startDisplay, endDisplay }
+    let activeStart = null;     // 未结束的开始时间 (Date对象 或 null)
+
+    // ---------- 辅助函数 ----------
+    function formatDateTime(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+
+    function msToTime(ms) {
+        if (ms < 0) ms = 0;
+        let totalSeconds = Math.floor(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function calcDurationMs(startDate, endDate) {
+        return endDate - startDate;
+    }
+
+    // 保存所有数据到 localStorage
+    function persistData() {
+        localStorage.setItem(STORAGE_RECORDS, JSON.stringify(records));
+        if (activeStart) {
+            localStorage.setItem(STORAGE_ACTIVE_START, activeStart.toISOString());
+        } else {
+            localStorage.removeItem(STORAGE_ACTIVE_START);
+        }
+    }
+
+    // 加载本地数据
+    function loadData() {
+        const storedRecords = localStorage.getItem(STORAGE_RECORDS);
+        if (storedRecords) {
+            try {
+                records = JSON.parse(storedRecords);
+                if (!Array.isArray(records)) records = [];
+            } catch(e) { records = []; }
+        } else {
+            records = [];
+        }
+
+        const storedActive = localStorage.getItem(STORAGE_ACTIVE_START);
+        if (storedActive) {
+            try {
+                const parsed = new Date(storedActive);
+                if (!isNaN(parsed.getTime())) {
+                    activeStart = parsed;
+                } else {
+                    activeStart = null;
+                }
+            } catch(e) { activeStart = null; }
+        } else {
+            activeStart = null;
+        }
+    }
+
+    // 更新总工时显示
+    function updatePanelTotalDisplay() {
+        const totalMs = records.reduce((sum, record) => sum + (record.durationMs || 0), 0);
+        const totalFormatted = msToTime(totalMs);
+        const totalSpan = document.getElementById('totalHoursDisplay');
+        if (totalSpan) totalSpan.innerText = totalFormatted;
+    }
+
+    // 渲染最近一次打卡记录 (优先显示最新完成的工时，如果没有则显示进行中的开始时间)
+    function renderRecentRecord() {
+        const recentContainer = document.getElementById('recentRecordContent');
+        if (!recentContainer) return;
+        
+        // 寻找最新的已完成记录 (按结束时间倒序)
+        let latestRecord = null;
+        if (records.length > 0) {
+            const sorted = [...records].sort((a, b) => new Date(b.endTime) - new Date(a.endTime));
+            latestRecord = sorted[0];
+        }
+        
+        if (latestRecord) {
+            const startShow = latestRecord.startDisplay || formatDateTime(new Date(latestRecord.startTime));
+            const endShow = latestRecord.endDisplay || formatDateTime(new Date(latestRecord.endTime));
+            const duration = msToTime(latestRecord.durationMs);
+            recentContainer.innerHTML = `
+                <span class="recent-detail">🕒 ${startShow}  →  ${endShow}</span>
+                <span class="recent-detail">⏱️ 时长 ${duration}</span>
+            `;
+        } else if (activeStart) {
+            // 没有完成记录，但有进行中的打卡
+            const startPretty = formatDateTime(activeStart);
+            recentContainer.innerHTML = `
+                <span class="recent-detail">⏳ 进行中 · 开始于 ${startPretty}</span>
+                <span class="recent-detail">✨ 尚未结束，暂无完整记录</span>
+            `;
+        } else {
+            recentContainer.innerHTML = `<span>✨ 暂无打卡记录，点击开始工作吧</span>`;
+        }
+    }
+    
+    // 渲染整个记录表格
+    function renderRecordsTable() {
+        const tbody = document.getElementById('recordsTbody');
+        if (!tbody) return;
+        
+        if (records.length === 0) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="4">🌱 暂无打卡记录，点击开始工作吧</td></tr>';
+            return;
+        }
+        
+        const sorted = [...records].sort((a, b) => new Date(b.endTime) - new Date(a.endTime));
+        let html = '';
+        for (const rec of sorted) {
+            const startShow = rec.startDisplay || formatDateTime(new Date(rec.startTime));
+            const endShow = rec.endDisplay || formatDateTime(new Date(rec.endTime));
+            const durationStr = msToTime(rec.durationMs);
+            html += `
+                <tr>
+                    <td>${escapeHtml(startShow)}</td>
+                    <td>${escapeHtml(endShow)}</td>
+                    <td>${escapeHtml(durationStr)}</td>
+                    <td><button class="record-delete" data-id="${rec.id || ''}" data-starttime="${rec.startTime}" data-endtime="${rec.endTime}">✕</button></td>
+                </tr>
+            `;
+        }
+        tbody.innerHTML = html;
+        
+        // 绑定删除事件
+        document.querySelectorAll('.record-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const startTimeAttr = btn.getAttribute('data-starttime');
+                const endTimeAttr = btn.getAttribute('data-endtime');
+                if (startTimeAttr && endTimeAttr) {
+                    if (confirm('⏳ 确定删除这条工时记录吗？删除后不可恢复。')) {
+                        deleteRecordByStartEnd(startTimeAttr, endTimeAttr);
+                    }
+                }
+            });
+        });
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    function deleteRecordByStartEnd(startTime, endTime) {
+        const index = records.findIndex(rec => rec.startTime === startTime && rec.endTime === endTime);
+        if (index !== -1) {
+            records.splice(index, 1);
+            persistData();
+            updateActiveDisplay();
+            renderRecordsTable();
+            updatePanelTotalDisplay();
+            renderRecentRecord();   // 刷新最近记录
+        } else {
+            alert('记录不存在或已删除');
+        }
+    }
+    
+    // 更新当前工作状态显示
+    function updateActiveDisplay() {
+        const statusDiv = document.getElementById('workStatusLabel');
+        const activeTimeSpan = document.getElementById('activeStartTimeDisplay');
+        if (activeStart) {
+            const startPretty = formatDateTime(activeStart);
+            statusDiv.innerHTML = `⏳ 工作中 · 开始于 ${startPretty}`;
+            activeTimeSpan.innerHTML = `<span class="badge-working">⚡ 进行中，记得结束打卡</span>`;
+        } else {
+            statusDiv.innerHTML = `🍃 当前状态 · 空闲中`;
+            activeTimeSpan.innerHTML = ``;
+        }
+        // 状态变化后最近记录也可能受影响
+        renderRecentRecord();
+    }
+    
+    // 开始打卡
+    function startWork() {
+        if (activeStart) {
+            alert('已有未结束的工作时段，请先点击“结束工作”完成当前打卡。');
+            return;
+        }
+        const now = new Date();
+        activeStart = now;
+        persistData();
+        updateActiveDisplay();
+        renderRecentRecord();
+        alert(`✅ 打卡开始时间: ${formatDateTime(now)}`);
+    }
+    
+    // 结束打卡
+    function endWork() {
+        if (!activeStart) {
+            alert('没有正在进行的工作打卡，请先点击“开始工作”。');
+            return;
+        }
+        const endDate = new Date();
+        const startDate = activeStart;
+        const durationMs = calcDurationMs(startDate, endDate);
+        if (durationMs <= 0) {
+            alert('结束时间必须晚于开始时间，请检查系统时间。');
+            return;
+        }
+        
+        const recordId = Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+        const startDisplay = formatDateTime(startDate);
+        const endDisplay = formatDateTime(endDate);
+        
+        const newRecord = {
+            id: recordId,
+            startTime: startDate.toISOString(),
+            endTime: endDate.toISOString(),
+            durationMs: durationMs,
+            startDisplay: startDisplay,
+            endDisplay: endDisplay
+        };
+        records.push(newRecord);
+        activeStart = null;
+        persistData();
+        
+        updateActiveDisplay();
+        renderRecordsTable();
+        updatePanelTotalDisplay();
+        renderRecentRecord();
+        alert(`⏱️ 工时记录完成！\n开始: ${startDisplay}\n结束: ${endDisplay}\n时长: ${msToTime(durationMs)}`);
+    }
+    
+    // 清空所有打卡记录
+    function clearAllRecords() {
+        if (records.length === 0 && !activeStart) {
+            alert('暂无任何数据可清除');
+            return;
+        }
+        const confirmMsg = activeStart ? 
+            '⚠️ 当前有未结束的工作时段，清空所有记录将会丢失进行中的打卡。\n确定清空所有打卡记录吗？' : 
+            '⚠️ 确定清空所有打卡记录吗？数据不可恢复。';
+        if (confirm(confirmMsg)) {
+            records = [];
+            if (activeStart) activeStart = null;
+            persistData();
+            updateActiveDisplay();
+            renderRecordsTable();
+            updatePanelTotalDisplay();
+            renderRecentRecord();
+            alert('✅ 所有打卡记录已清空');
+        }
+    }
+    
+    // 复制所有打卡记录到剪贴板 (格式化为表格文本)
+    async function copyRecordsToClipboard() {
+        if (records.length === 0) {
+            alert('暂无打卡记录可复制');
+            return;
+        }
+        
+        // 按开始时间升序排列（更符合阅读习惯）
+        const sorted = [...records].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+        
+        // 准备表头和数据
+        const headers = ['开始时间', '结束时间', '工作时长'];
+        const rows = sorted.map(rec => {
+            const startShow = rec.startDisplay || formatDateTime(new Date(rec.startTime));
+            const endShow = rec.endDisplay || formatDateTime(new Date(rec.endTime));
+            const duration = msToTime(rec.durationMs);
+            return [startShow, endShow, duration];
+        });
+        
+        // 构建纯文本表格（对齐优化，每个单元格宽度自适应，但为了简洁，使用制表符或空格）
+        // 方案：生成 Markdown 风格或简单分隔符，让复制后易读
+        let textContent = '📋 工时打卡记录\n\n';
+        // 添加表头
+        textContent += headers.join(' | ') + '\n';
+        textContent += '--- | --- | ---\n';
+        // 添加数据行
+        rows.forEach(row => {
+            textContent += row.join(' | ') + '\n';
+        });
+        textContent += `\n📊 累计总工时: ${msToTime(records.reduce((sum, r) => sum + r.durationMs, 0))}\n`;
+        textContent += `📅 记录条数: ${records.length}\n`;
+        
+        try {
+            await navigator.clipboard.writeText(textContent);
+            alert('✅ 打卡记录已复制到剪贴板！');
+        } catch (err) {
+            // 降级方案
+            const textarea = document.createElement('textarea');
+            textarea.value = textContent;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert('✅ 打卡记录已复制到剪贴板！');
+        }
+    }
+    
+    // ---------- 折叠面板交互 ----------
+    let isPanelVisible = false;
+    const statsPanel = document.getElementById('statsPanel');
+    const toggleStatsBtn = document.getElementById('toggleStatsBtn');
+    
+    function toggleStatsPanel() {
+        if (isPanelVisible) {
+            statsPanel.style.display = 'none';
+            toggleStatsBtn.innerHTML = '📊 工时汇总 & 数据管理';
+            isPanelVisible = false;
+        } else {
+            statsPanel.style.display = 'block';
+            toggleStatsBtn.innerHTML = '🔽 收起工时面板';
+            isPanelVisible = true;
+            // 展开时刷新数据
+            updatePanelTotalDisplay();
+            renderRecordsTable();
+        }
+    }
+    
+    // 刷新面板内容（如果面板可见）
+    function refreshPanelIfVisible() {
+        if (isPanelVisible) {
+            updatePanelTotalDisplay();
+            renderRecordsTable();
+        }
+    }
+    
+    // ---------- 事件绑定 ----------
+    function bindEvents() {
+        const startBtn = document.getElementById('startWorkBtn');
+        const endBtn = document.getElementById('endWorkBtn');
+        const clearBtn = document.getElementById('clearAllBtn');
+        const copyBtn = document.getElementById('copyRecordsBtn');
+        
+        if (startBtn) startBtn.addEventListener('click', startWork);
+        if (endBtn) endBtn.addEventListener('click', endWork);
+        if (clearBtn) clearBtn.addEventListener('click', clearAllRecords);
+        if (copyBtn) copyBtn.addEventListener('click', copyRecordsToClipboard);
+        if (toggleStatsBtn) toggleStatsBtn.addEventListener('click', toggleStatsPanel);
+    }
+    
+    // 初始化
+    function init() {
+        loadData();
+        bindEvents();
+        updateActiveDisplay();
+        renderRecordsTable();
+        updatePanelTotalDisplay();
+        renderRecentRecord();
+        // 面板默认隐藏
+        statsPanel.style.display = 'none';
+        isPanelVisible = false;
+        toggleStatsBtn.innerHTML = '📊 工时汇总 & 数据管理';
+    }
+    
+    init();
+</script>
+</body>
+</html>
